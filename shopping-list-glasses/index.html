@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<meta name="description" content="Shopping list with a full phone and browser view plus a glanceable view tuned for Meta Ray-Ban Display glasses." />
+<!-- Meta Ray-Ban Display: 600 x 600 waveguide display. The glasses view below targets that exact viewport, pure-black background for transparency, and oversized glanceable type per Meta's display web guidance. -->
+<link rel="icon" href="data:," />
+<title>Shopping List for Glasses</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFBF0; --surface:#FFFFFF; --surface-2:#FFF6DE; --ink:#17251B; --muted:#6B7A6E; --line:#E8DFC8;
+    --green:#166534; --green-bright:#22C55E; --green-soft:#DCFCE7; --amber:#D97706; --amber-soft:#FEF3C7;
+    --red:#B91C1C; --radius:18px; --shadow:0 8px 30px rgba(23,37,27,.08);
+    --glasses-bg:#000000; --glasses-ink:#FFFFFF; --glasses-dim:#A3A3A3; --glasses-accent:#4ADE80; --glasses-amber:#FBBF24;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0F1711; --surface:#16211A; --surface-2:#1C2A20; --ink:#EDF5EE; --muted:#9AB09E; --line:#2A3D2F; --green-soft:#14301E; --amber-soft:#2E2103; --shadow:0 8px 30px rgba(0,0,0,.35); }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:"Public Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:var(--green)}
+  button{font:inherit;cursor:pointer}
+  input,select{font:inherit}
+
+  .wrap{max-width:980px;margin:0 auto;padding:20px 18px 56px}
+  /* Mode switch */
+  .topbar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .eyebrow{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
+  h1{font-family:"Bricolage Grotesque",sans-serif;font-size:clamp(32px,5vw,52px);line-height:.95;letter-spacing:-.02em;margin:6px 0 8px;font-weight:800}
+  h1 span{color:var(--green)}
+  .lede{color:var(--muted);max-width:56ch;margin:0;font-size:16px}
+  .segmented{display:flex;background:var(--surface);border:1.5px solid var(--line);border-radius:999px;padding:5px;gap:4px;box-shadow:var(--shadow);width:fit-content}
+  .segmented button{border:0;background:transparent;padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap}
+  .segmented button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .segmented button:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible{outline:3px solid var(--green-bright);outline-offset:2px}
+
+  /* Standard view */
+  .grid{display:grid;grid-template-columns:1.55fr .85fr;gap:18px;align-items:start}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .card-pad{padding:18px}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .stat{flex:1;min-width:110px;background:var(--surface-2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+  .stat b{font-family:"Bricolage Grotesque",sans-serif;font-size:28px;line-height:1;display:block}
+  .stat span{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  .progress{height:8px;background:var(--line);border-radius:999px;overflow:hidden;margin:4px 0 16px}
+  .progress i{display:block;height:100%;background:var(--green);border-radius:999px;transition:width .3s ease}
+
+  .addform{display:grid;grid-template-columns:1fr 92px 132px auto;gap:8px}
+  @media(max-width:560px){.addform{grid-template-columns:1fr 84px} .addform select{grid-column:1/-1} .addform .addbtn{grid-column:1/-1}}
+  .field{width:100%;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:12px 13px;font-size:16px}
+  .addbtn{background:var(--green);color:#fff;border:0;border-radius:12px;padding:12px 18px;font-weight:800}
+  .quick{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .quick span{font-size:12px;font-weight:700;color:var(--muted);align-self:center;margin-right:2px}
+  .chip{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:7px 12px;font-size:13px;font-weight:600}
+  .chip:hover{border-color:var(--green);color:var(--green)}
+
+  .filters{display:flex;gap:6px;margin:16px 0 10px;flex-wrap:wrap}
+  .filters button{border:1.5px solid var(--line);background:transparent;color:var(--muted);padding:7px 13px;border-radius:999px;font-weight:700;font-size:13px}
+  .filters button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  ul.list{list-style:none;margin:0;padding:0}
+  .item{display:flex;align-items:center;gap:12px;padding:13px 6px;border-bottom:1px solid var(--line)}
+  .item:last-child{border-bottom:0}
+  .tick{flex:0 0 auto;width:34px;height:34px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:17px;color:transparent;transition:.15s}
+  .tick[aria-pressed="true"]{background:var(--green);border-color:var(--green);color:#fff}
+  .item-main{flex:1;min-width:0}
+  .item-name{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+  .item.done .item-name{text-decoration:line-through;color:var(--muted)}
+  .item-meta{font-size:13px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+  .badge{background:var(--amber-soft);color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.03em;text-transform:uppercase;padding:2px 7px;border-radius:999px}
+  .del{border:0;background:transparent;color:var(--muted);width:36px;height:36px;border-radius:50%;font-size:18px;line-height:1}
+  .del:hover{background:#FEE2E2;color:var(--red)}
+  @media (prefers-color-scheme: dark){.del:hover{background:#3A1515}}
+  .empty{padding:28px 12px;text-align:center;color:var(--muted)}
+  .empty b{color:var(--ink);display:block;font-size:17px;margin-bottom:4px}
+  .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:10px 14px;font-weight:700;font-size:14px}
+  .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .note{font-size:13px;color:var(--muted);margin-top:10px}
+
+  .side h2, .how h2{font-family:"Bricolage Grotesque",sans-serif;font-size:20px;margin:0 0 8px;letter-spacing:-.01em}
+  .side p, .how p{color:var(--muted);font-size:14px;margin:0 0 10px}
+  .spec{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14px}
+  .spec:last-child{border-bottom:0}
+  .spec b{font-family:"IBM Plex Mono",monospace;font-size:13px;text-align:right}
+  .how{margin-top:18px}
+  .how ol{margin:8px 0 0 18px;padding:0;color:var(--muted);font-size:14px}
+  .how li{margin-bottom:6px}
+  .how li b{color:var(--ink)}
+
+  /* ============ GLASSES VIEW ============ */
+  .glasses-shell{display:none}
+  body[data-mode="glasses"] .standard-shell{display:none}
+  body[data-mode="glasses"] .glasses-shell{display:block}
+  body[data-mode="glasses"]{background:#050505}
+  body[data-mode="glasses"] .wrap{max-width:680px}
+  body[data-mode="glasses"] h1, body[data-mode="glasses"] .lede, body[data-mode="glasses"] .eyebrow{color:#EDEDED}
+  body[data-mode="glasses"] .eyebrow{color:#888}
+  body[data-mode="glasses"] .segmented{background:#111;border-color:#262626;box-shadow:none}
+  body[data-mode="glasses"] .segmented button[aria-pressed="true"]{background:#fff;color:#000}
+
+  .stage{width:min(600px,100%);aspect-ratio:1/1;margin:0 auto;background:var(--glasses-bg);color:var(--glasses-ink);border-radius:28px;border:1px solid #262626;overflow:hidden;display:flex;flex-direction:column;position:relative}
+  @media(max-width:640px){.stage{border-radius:20px}}
+  .stage-top{display:flex;justify-content:space-between;align-items:center;padding:18px 22px 6px;font-family:"IBM Plex Mono",monospace;font-size:13px;letter-spacing:.12em;color:var(--glasses-dim)}
+  .stage-top .live{color:var(--glasses-accent);font-weight:700}
+  .stage-progress{height:6px;background:#222;margin:10px 22px 0;border-radius:999px;overflow:hidden}
+  .stage-progress i{display:block;height:100%;background:var(--glasses-accent)}
+  .focus{flex:1;display:flex;flex-direction:column;justify-content:center;padding:10px 26px}
+  .focus-label{font-family:"IBM Plex Mono",monospace;color:var(--glasses-amber);font-size:13px;letter-spacing:.14em;font-weight:600}
+  .focus-name{font-size:clamp(38px,9vw,58px);line-height:.98;font-weight:800;letter-spacing:-.02em;margin:8px 0 8px;overflow-wrap:anywhere}
+  .focus-meta{font-size:20px;color:var(--glasses-dim)}
+  .focus-meta b{color:#fff}
+  .focus-actions{display:grid;grid-template-columns:1.4fr 1fr;gap:10px;padding:0 22px 14px}
+  .gbtn{border-radius:16px;padding:18px 14px;font-size:19px;font-weight:800;border:2px solid #333;background:#111;color:#fff;min-height:64px}
+  .gbtn.got{background:var(--glasses-accent);color:#052e12;border-color:var(--glasses-accent)}
+  .queue{border-top:1px solid #1f1f1f;padding:12px 22px 18px}
+  .queue h3{margin:0 0 8px;font-size:12px;letter-spacing:.12em;color:var(--glasses-dim);font-family:"IBM Plex Mono",monospace;font-weight:600}
+  .queue-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:19px;border-bottom:1px solid #141414}
+  .queue-row:last-child{border-bottom:0}
+  .queue-row span:last-child{color:var(--glasses-dim);font-size:16px}
+  .queue-row.is-done{color:#555;text-decoration:line-through}
+  .navrow{display:flex;gap:8px;padding:0 22px 20px}
+  .navrow button{flex:1;background:transparent;border:1.5px solid #2a2a2a;color:#ddd;border-radius:12px;padding:12px;font-weight:700;font-size:15px}
+  .gesture-hint{text-align:center;color:#777;font-size:13px;padding:0 18px 18px;font-family:"IBM Plex Mono",monospace}
+  .glasses-foot{max-width:600px;margin:14px auto 0;color:#A3A3A3;font-size:14px;line-height:1.6}
+  .glasses-foot b{color:#fff}
+  .all-done{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+  .all-done .big{font-size:52px;font-weight:800;line-height:1}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:20px;background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:999px;font-weight:700;font-size:14px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s;z-index:50;max-width:92vw;text-align:center}
+  .toast.show{opacity:1}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  @media (prefers-reduced-motion: reduce){*{transition:none !important}}
+</style>
+</head>
+<body data-mode="standard">
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="eyebrow">One list · Two displays</div>
+      <h1>Shopping List<br><span>for Glasses</span></h1>
+      <p class="lede">One list, two layouts in the same page. Build it in the full phone and browser view, then flip this same tab to the glasses layout to shop from. Copy or download the list if you want to take it to another device.</p>
+    </div>
+    <div class="segmented" role="group" aria-label="Choose display">
+      <button type="button" id="btnStandard" aria-pressed="true">📱 Phone &amp; Browser</button>
+      <button type="button" id="btnGlasses" aria-pressed="false">👓 Ray-Ban Display</button>
+    </div>
+  </div>
+
+  <!-- STANDARD VIEW -->
+  <div class="standard-shell">
+    <div class="grid">
+      <section class="card card-pad" aria-label="Your shopping list">
+        <div class="stats">
+          <div class="stat"><b id="statLeft">0</b><span>Still to buy</span></div>
+          <div class="stat"><b id="statDone">0</b><span>In the trolley</span></div>
+          <div class="stat"><b id="statTotal">0</b><span>Total items</span></div>
+        </div>
+        <div class="progress" aria-hidden="true"><i id="progressBar" style="width:0%"></i></div>
+
+        <form class="addform" id="addForm">
+          <label class="sr" for="itemInput">Item name</label>
+          <input class="field" id="itemInput" type="text" placeholder="Add an item, e.g. Oat milk" autocomplete="off" maxlength="60" required>
+          <label class="sr" for="qtyInput">Quantity</label>
+          <input class="field" id="qtyInput" type="text" placeholder="Qty" value="1" maxlength="10" aria-label="Quantity">
+          <label class="sr" for="catInput">Category</label>
+          <select class="field" id="catInput">
+            <option>Fresh</option><option>Bakery</option><option>Dairy &amp; Eggs</option><option>Meat &amp; Fish</option>
+            <option>Frozen</option><option>Cupboard</option><option>Drinks</option><option>Household</option><option>Other</option>
+          </select>
+          <button class="addbtn" type="submit">+ Add</button>
+        </form>
+        <div class="quick" aria-label="Quick add">
+          <span>Quick add:</span>
+          <button type="button" class="chip" data-quick="Milk|1|Dairy & Eggs">Milk</button>
+          <button type="button" class="chip" data-quick="Eggs|6|Dairy & Eggs">Eggs</button>
+          <button type="button" class="chip" data-quick="Sourdough loaf|1|Bakery">Sourdough</button>
+          <button type="button" class="chip" data-quick="Bananas|1 bunch|Fresh">Bananas</button>
+          <button type="button" class="chip" data-quick="Coffee beans|1|Cupboard">Coffee</button>
+          <button type="button" class="chip" data-quick="Washing tablets|1|Household">Washing tablets</button>
+        </div>
+
+        <div class="filters" role="group" aria-label="Filter list">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="left" aria-pressed="false">Still to buy</button>
+          <button type="button" data-filter="done" aria-pressed="false">In trolley</button>
+        </div>
+
+        <ul class="list" id="listEl"></ul>
+        <div class="empty" id="emptyEl" hidden><b>Nothing here yet</b>Add your first item above, or tap a quick-add chip.</div>
+
+        <div class="actions">
+          <button type="button" class="btn primary" id="copyBtn">Copy list</button>
+          <button type="button" class="btn" id="downloadBtn">Download .txt</button>
+          <button type="button" class="btn" id="clearDoneBtn">Clear ticked</button>
+          <button type="button" class="btn" id="voiceBtn">🎙 Add by voice</button>
+        </div>
+        <p class="note">Starter list below so you can try it straight away. Edit it freely. The list lives in this tab for this session only, so keep the tab open while you shop.</p>
+      </section>
+
+      <div>
+        <aside class="card card-pad side">
+          <h2>Glasses layout: Ray-Ban Display preview</h2>
+          <p>This is a web preview of the glasses layout, sized and styled for the Ray-Ban Display: a square, glanceable surface you read in under two seconds, with no scrolling. There is no separate public JavaScript SDK file to import for this; display web content is built with standard web tech, and this preview follows that model.</p>
+          <div class="spec"><span>Display</span><b>600 × 600 px</b></div>
+          <div class="spec"><span>Background</span><b>Pure black</b></div>
+          <div class="spec"><span>Focus item type</span><b>38–58 px</b></div>
+          <div class="spec"><span>Tap / pinch targets</span><b>64 px min</b></div>
+          <div class="spec"><span>Interaction</span><b>Pinch · Swipe · Voice</b></div>
+          <div class="spec"><span>Web tech</span><b>HTML / CSS / JS</b></div>
+          <p style="margin-top:12px">What you get here is the layout itself: fixed 600 × 600 square, pure-black background, high-contrast palette and voice input, ready to open in a browser. Treat the glasses tab above as a faithful preview of that layout, not a live connection to a paired pair of glasses from this page.</p>
+        </aside>
+
+        <aside class="card card-pad how">
+          <h2>How to use it in the shop</h2>
+          <ol>
+            <li><b>Build the list:</b> add everything in Phone view in this tab.</li>
+            <li><b>Flip the view:</b> switch this same tab to Ray-Ban Display to see the glasses layout with the same items. To shop from the actual glasses, open this page there and re-add or copy the list across, as this static page does not sync between devices.</li>
+            <li><b>As you shop:</b> the next item is shown huge. Tap <b>Got it</b> to tick it off and move on.</li>
+            <li><b>Hands full?</b> Use Add by voice in Phone view, or the arrow keys on a keyboard.</li>
+          </ol>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLASSES VIEW -->
+  <div class="glasses-shell">
+    <div class="stage" id="stage" aria-label="Glasses display preview, 600 by 600">
+      <div class="stage-top"><span>🛒 SHOPPING LIST</span><span class="live" id="stageCount">0 LEFT</span><span id="stageClock">--:--</span></div>
+      <div class="stage-progress"><i id="stageProgress" style="width:0%"></i></div>
+
+      <div class="focus" id="focusBox">
+        <div class="focus-label" id="focusLabel">NEXT UP · 1 OF 1</div>
+        <div class="focus-name" id="focusName">Your list is empty</div>
+        <div class="focus-meta" id="focusMeta">Add items in Phone view first</div>
+      </div>
+      <div class="all-done" id="allDoneBox">
+        <div style="font-size:54px">✓</div>
+        <div class="big">All done</div>
+        <p style="color:#A3A3A3;font-size:19px;margin:8px 0 0">Everything is in the trolley.</p>
+      </div>
+
+      <div class="focus-actions" id="focusActions">
+        <button type="button" class="gbtn got" id="gotBtn">✓ &nbsp;Got it</button>
+        <button type="button" class="gbtn" id="skipBtn">Skip →</button>
+      </div>
+      <div class="navrow">
+        <button type="button" id="prevBtn">← Previous</button>
+        <button type="button" id="gVoiceBtn">🎙 Say an item</button>
+        <button type="button" id="nextBtn">Next →</button>
+      </div>
+      <div class="queue" id="queueBox"><h3>UP NEXT</h3><div id="queueRows"></div></div>
+      <div class="gesture-hint">NEURAL BAND · PINCH = GOT IT &nbsp;·&nbsp; SWIPE = NEXT &nbsp;·&nbsp; ← → KEYS WORK TOO</div>
+    </div>
+    <p class="glasses-foot">Preview of the <b>600 × 600</b> surface for the Ray-Ban Display. Pure black lets the waveguide stay transparent, type is sized to be read at a glance, and only one item asks for your attention at a time. Switch back to Phone view any time to edit the list &mdash; both views in this tab share the same items.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  var items = [
+    {id:1, name:"Semi-skimmed milk", qty:"2", cat:"Dairy & Eggs", done:false},
+    {id:2, name:"Free-range eggs", qty:"6", cat:"Dairy & Eggs", done:false},
+    {id:3, name:"Sourdough loaf", qty:"1", cat:"Bakery", done:false},
+    {id:4, name:"Chicken breasts", qty:"500g", cat:"Meat & Fish", done:false},
+    {id:5, name:"Broccoli", qty:"1", cat:"Fresh", done:true},
+    {id:6, name:"Dishwasher tablets", qty:"1 pack", cat:"Household", done:false}
+  ];
+  var nextId = 7;
+  var filter = "all";
+  var focusIdx = 0; // index into remaining (not done) items
+
+  var listEl = document.getElementById('listEl');
+  var emptyEl = document.getElementById('emptyEl');
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+  function toast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function(){ toastEl.classList.remove('show'); }, 2200); }
+  function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+  function remaining(){ return items.filter(function(i){ return !i.done; }); }
+  function clampFocus(){ var r = remaining(); if(r.length===0){ focusIdx=0; return; } if(focusIdx<0) focusIdx=r.length-1; if(focusIdx>=r.length) focusIdx=0; }
+
+  function render(){
+    // stats
+    var left = remaining().length, done = items.length - left;
+    document.getElementById('statLeft').textContent = left;
+    document.getElementById('statDone').textContent = done;
+    document.getElementById('statTotal').textContent = items.length;
+    document.getElementById('progressBar').style.width = items.length ? Math.round(done/items.length*100)+'%' : '0%';
+
+    // list
+    var visible = items.filter(function(i){ return filter==='all' || (filter==='left' && !i.done) || (filter==='done' && i.done); });
+    listEl.innerHTML = visible.map(function(i){
+      return '<li class="item'+(i.done?' done':'')+'">'
+        + '<button type="button" class="tick" data-tick="'+i.id+'" aria-pressed="'+i.done+'" aria-label="Tick off '+esc(i.name)+'">'+(i.done?'✓':'')+'</button>'
+        + '<div class="item-main"><div class="item-name">'+esc(i.name)+'</div><div class="item-meta"><span>× '+esc(i.qty)+'</span><span class="badge">'+esc(i.cat)+'</span></div></div>'
+        + '<button type="button" class="del" data-del="'+i.id+'" aria-label="Remove '+esc(i.name)+'">×</button></li>';
+    }).join('');
+    emptyEl.hidden = visible.length !== 0;
+
+    // glasses
+    clampFocus();
+    var r = remaining();
+    document.getElementById('stageCount').textContent = left + ' LEFT';
+    document.getElementById('stageProgress').style.width = items.length ? Math.round(done/items.length*100)+'%' : '0%';
+    var focusBox = document.getElementById('focusBox'), allDone = document.getElementById('allDoneBox'), actions = document.getElementById('focusActions');
+    if(r.length===0 && items.length>0){ focusBox.style.display='none'; actions.style.display='none'; allDone.style.display='flex'; }
+    else{
+      allDone.style.display='none'; focusBox.style.display='flex'; actions.style.display='grid';
+      if(r.length===0){ document.getElementById('focusLabel').textContent='LIST'; document.getElementById('focusName').textContent='Your list is empty'; document.getElementById('focusMeta').innerHTML='Add items in <b>Phone view</b> first'; }
+      else{
+        var cur = r[focusIdx];
+        document.getElementById('focusLabel').textContent = 'NEXT UP · ' + (focusIdx+1) + ' OF ' + r.length;
+        document.getElementById('focusName').textContent = cur.name;
+        document.getElementById('focusMeta').innerHTML = 'Qty <b>'+esc(cur.qty)+'</b> &nbsp;·&nbsp; '+esc(cur.cat);
+      }
+    }
+    // queue: next 3 after focus + done summary
+    var rows = '';
+    if(r.length){
+      for(var k=1;k<=Math.min(3, r.length-1);k++){ var it = r[(focusIdx+k)%r.length]; rows += '<div class="queue-row"><span>'+esc(it.name)+'</span><span>× '+esc(it.qty)+'</span></div>'; }
+      if(!rows) rows = '<div class="queue-row"><span style="color:#777">Last item on the list</span><span></span></div>';
+    } else if(items.length){ rows = '<div class="queue-row"><span style="color:#777">Nothing left to buy</span><span></span></div>'; }
+    else { rows = '<div class="queue-row"><span style="color:#777">No items yet</span><span></span></div>'; }
+    document.getElementById('queueRows').innerHTML = rows;
+    tickClock();
+  }
+  function tickClock(){ var el=document.getElementById('stageClock'); if(!el) return; var d=new Date(); el.textContent = String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+  setInterval(tickClock, 20000);
+
+  // Mode toggle
+  var bS=document.getElementById('btnStandard'), bG=document.getElementById('btnGlasses');
+  function setMode(m){
+    document.body.setAttribute('data-mode', m);
+    bS.setAttribute('aria-pressed', m==='standard'?'true':'false');
+    bG.setAttribute('aria-pressed', m==='glasses'?'true':'false');
+    if(m==='glasses'){ toast('Glasses view · 600 × 600 · pinch or tap Got it'); }
+    render();
+  }
+  bS.addEventListener('click', function(){ setMode('standard'); });
+  bG.addEventListener('click', function(){ setMode('glasses'); });
+
+  // Add form
+  document.getElementById('addForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = document.getElementById('itemInput').value.trim();
+    if(!name) return;
+    var qty = document.getElementById('qtyInput').value.trim() || '1';
+    var cat = document.getElementById('catInput').value;
+    items.unshift({id:nextId++, name:name, qty:qty, cat:cat, done:false});
+    focusIdx = 0;
+    document.getElementById('itemInput').value=''; document.getElementById('qtyInput').value='1';
+    toast('Added: '+name);
+    render();
+  });
+  document.querySelectorAll('[data-quick]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var p = btn.getAttribute('data-quick').split('|');
+      items.unshift({id:nextId++, name:p[0], qty:p[1], cat:p[2], done:false});
+      toast('Added: '+p[0]); render();
+    });
+  });
+
+  // List actions (event delegation)
+  listEl.addEventListener('click', function(e){
+    var t = e.target.closest('[data-tick]'), d = e.target.closest('[data-del]');
+    if(t){ var id=+t.getAttribute('data-tick'); items.forEach(function(i){ if(i.id===id) i.done=!i.done; }); render(); }
+    if(d){ var did=+d.getAttribute('data-del'); items = items.filter(function(i){ return i.id!==did; }); toast('Removed'); render(); }
+  });
+  document.querySelectorAll('[data-filter]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      filter = btn.getAttribute('data-filter');
+      document.querySelectorAll('[data-filter]').forEach(function(b){ b.setAttribute('aria-pressed', b===btn?'true':'false'); });
+      render();
+    });
+  });
+  document.getElementById('clearDoneBtn').addEventListener('click', function(){
+    var n = items.filter(function(i){return i.done;}).length;
+    items = items.filter(function(i){ return !i.done; });
+    toast(n ? 'Cleared '+n+' ticked item'+(n>1?'s':'') : 'Nothing ticked yet'); render();
+  });
+
+  function listText(){
+    var lines = items.map(function(i){ return (i.done?'[x] ':'[ ] ')+i.name+' — × '+i.qty+' ('+i.cat+')'; });
+    return 'Shopping list\n' + lines.join('\n');
+  }
+  document.getElementById('copyBtn').addEventListener('click', function(){
+    var txt = listText();
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(function(){ toast('List copied'); }, function(){ toast('Copy was blocked by the browser'); }); }
+    else { toast('Copy is not available here, use Download instead'); }
+  });
+  document.getElementById('downloadBtn').addEventListener('click', function(){
+    var blob = new Blob([listText()], {type:'text/plain'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'shopping-list.txt'; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+    toast('Downloaded shopping-list.txt');
+  });
+
+  // Glasses controls
+  document.getElementById('gotBtn').addEventListener('click', function(){
+    var r = remaining(); if(!r.length) return;
+    var cur = r[focusIdx]; cur.done = true;
+    toast('✓ '+cur.name); clampFocus(); render();
+  });
+  document.getElementById('skipBtn').addEventListener('click', function(){ var r=remaining(); if(r.length>1){ focusIdx=(focusIdx+1)%r.length; render(); } });
+  document.getElementById('nextBtn').addEventListener('click', function(){ var r=remaining(); if(r.length>1){ focusIdx=(focusIdx+1)%r.length; render(); } });
+  document.getElementById('prevBtn').addEventListener('click', function(){ var r=remaining(); if(r.length>1){ focusIdx=(focusIdx-1+r.length)%r.length; render(); } });
+  document.addEventListener('keydown', function(e){
+    if(document.body.getAttribute('data-mode')!=='glasses') return;
+    if(e.key==='ArrowRight'){ var r=remaining(); if(r.length>1){ focusIdx=(focusIdx+1)%r.length; render(); } }
+    if(e.key==='ArrowLeft'){ var r2=remaining(); if(r2.length>1){ focusIdx=(focusIdx-1+r2.length)%r2.length; render(); } }
+    if(e.key==='Enter'){ document.getElementById('gotBtn').click(); }
+  });
+
+  // Voice (Web Speech API, used by both views; on glasses voice is a primary input)
+  function startVoice(){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(!SR){ toast('Voice input is not supported in this browser'); return; }
+    try{
+      var rec = new SR(); rec.lang='en-GB'; rec.interimResults=false; rec.maxAlternatives=1;
+      toast('Listening… say an item name');
+      rec.onresult = function(ev){
+        var said = ev.results[0][0].transcript.trim();
+        if(said){ items.unshift({id:nextId++, name:said.charAt(0).toUpperCase()+said.slice(1), qty:'1', cat:'Other', done:false}); focusIdx=0; toast('Added: '+said); render(); }
+      };
+      rec.onerror = function(){ toast('Did not catch that, try again'); };
+      rec.start();
+    }catch(err){ toast('Voice input is not available here'); }
+  }
+  document.getElementById('voiceBtn').addEventListener('click', startVoice);
+  document.getElementById('gVoiceBtn').addEventListener('click', startVoice);
+
+  render();
+})();
+</script>
+</body>
+</html>
